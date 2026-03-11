@@ -1,127 +1,111 @@
 import streamlit as st
-import pandas as pd
 
-# 1. Konfigurasi Dasar
-st.set_page_config(page_title="LOGISTIC HELPER APP", layout="wide")
+# 1. Konfigurasi
+st.set_page_config(page_title="LOGISTIC HELPER APP", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. CSS untuk Card Klik-able tanpa Tombol Terlihat
+# 2. CSS Master (Menjamin Seluruh Area Kartu Bisa Diklik)
 st.markdown("""
     <style>
+    [data-testid="stHeader"] {display: none;}
     .stApp { background-color: #FFFFFF !important; }
 
-    .header-container { text-align: center; padding: 50px 0 30px 0; }
-    .main-title {
-        font-size: 45px; font-weight: 800;
-        background: linear-gradient(90deg, #FF4B2B 0%, #DC3545 100%);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        margin-bottom: 0px;
-    }
-    .sub-title { font-size: 18px; color: #57606f; }
+    .header-container { text-align: center; padding: 40px 0; }
+    .main-title { font-size: 45px; font-weight: 800; color: #DC3545; }
 
-    /* Container Card Utama */
-    .card-container {
+    /* Container Kartu */
+    .card-wrapper {
         position: relative;
+        height: 320px; /* Tinggi kartu */
+        width: 100%;
+    }
+
+    /* Desain Kartu Visual */
+    .card-visual {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
         background: #ffffff;
         border-radius: 24px;
-        padding: 40px 20px;
-        text-align: center;
         border: 1px solid #f1f2f6;
         box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-        transition: all 0.4s ease;
-        height: 300px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 1; /* Di bawah tombol */
     }
 
-    .card-container:hover {
-        transform: translateY(-12px);
-        box-shadow: 0 20px 40px rgba(220, 53, 69, 0.2);
+    /* Efek Nyala saat Mouse di atas Kartu */
+    .card-wrapper:hover .card-visual {
+        transform: translateY(-10px);
         border-color: #DC3545;
+        box-shadow: 0 20px 40px rgba(220, 53, 69, 0.15);
     }
 
     .icon-circle {
         width: 80px; height: 80px;
         background: #FFF5F5; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
-        font-size: 40px; margin-bottom: 20px; transition: 0.3s;
+        font-size: 40px; margin-bottom: 20px;
     }
 
-    .card-container:hover .icon-circle { background: #DC3545; color: white !important; }
-    .card-title { font-weight: 800; font-size: 18px; color: #2f3542; margin-bottom: 10px; text-transform: uppercase; }
-    .card-desc { font-size: 13px; color: #747d8c; line-height: 1.5; }
+    .card-title { font-weight: 800; font-size: 18px; color: #2f3542; margin-bottom: 10px; }
+    .card-desc { font-size: 14px; color: #747d8c; text-align: center; padding: 0 15px; }
 
-    /* Membuat Tombol Streamlit menjadi Transparan & Menutupi Seluruh Card */
+    /* TOMBOL TRANSPARAN - Menutupi seluruh kartu secara mutlak */
     .stButton > button {
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%; height: 300px;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 320px !important; /* Harus sama dengan card-wrapper */
         background: transparent !important;
         border: none !important;
         color: transparent !important;
-        z-index: 10;
+        z-index: 10 !important; /* Harus paling atas agar bisa diklik */
         cursor: pointer;
     }
     
-    /* Menghilangkan efek hover bawaan tombol agar tidak merusak desain card */
-    .stButton > button:hover { background: transparent !important; color: transparent !important; }
-    .stButton > button:active { background: transparent !important; color: transparent !important; }
-    .stButton > button:focus { box-shadow: none !important; }
+    .stButton > button:hover, .stButton > button:active, .stButton > button:focus {
+        background: transparent !important;
+        color: transparent !important;
+        box-shadow: none !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
 st.markdown("""
     <div class="header-container">
         <h1 class="main-title">Layanan Utama</h1>
-        <p class="sub-title">Kelola Operasional Logistik Area 1 • SamLog Helper</p>
+        <p style="color:#57606f; font-size: 18px;">Kelola Operasional Logistik Area 1 • SamLog Helper</p>
     </div>
     """, unsafe_allow_html=True)
 
-# Grid Menu Utama
+# Grid Menu
 col1, col2, col3, col4 = st.columns(4)
 
-with col1:
-    # Div Visual (Desain Card)
-    st.markdown("""
-        <div class="card-container">
-            <div class="icon-circle">🏷️</div>
-            <div class="card-title">Cetak ID Koli</div>
-            <p class="card-desc">Filter Stok 0% dan<br>Transformasi Data Koli</p>
-        </div>
-    """, unsafe_allow_html=True)
-    # Tombol Transparan (Logika Klik)
-    if st.button("", key="btn_koli"):
-        st.switch_page("pages/Cetak_ID_Koli.py")
+def create_card(col, icon, title, desc, page_name, k):
+    with col:
+        # Kita buka pembungkus kartu
+        st.markdown(f"""
+            <div class="card-wrapper">
+                <div class="card-visual">
+                    <div class="icon-circle">{icon}</div>
+                    <div class="card-title">{title}</div>
+                    <div class="card-desc">{desc}</div>
+                </div>
+        """, unsafe_allow_html=True)
+        
+        # Tombol Streamlit diletakkan di SINI. 
+        # Karena CSS 'absolute', dia akan otomatis 'terbang' ke atas menutupi div kartu.
+        if st.button(" ", key=k):
+            st.switch_page(f"pages/{page_name}.py")
+            
+        # Kita tutup pembungkus kartu
+        st.markdown("</div>", unsafe_allow_html=True)
 
-with col2:
-    st.markdown("""
-        <div class="card-container">
-            <div class="icon-circle">📦</div>
-            <div class="card-title">Stock In</div>
-            <p class="card-desc">Compare Data, Split PO,<br>dan Cek Stock Level</p>
-        </div>
-    """, unsafe_allow_html=True)
-    if st.button("", key="btn_stock"):
-        st.info("Fitur Stock In sedang disiapkan")
-
-with col3:
-    st.markdown("""
-        <div class="card-container">
-            <div class="icon-circle">👞</div>
-            <div class="card-title">Peminjaman</div>
-            <p class="card-desc">Monitoring Peminjaman<br>Sepatu & Sandal Kerja</p>
-        </div>
-    """, unsafe_allow_html=True)
-    st.button("", key="btn_pinjam")
-
-with col4:
-    st.markdown("""
-        <div class="card-container">
-            <div class="icon-circle">📋</div>
-            <div class="card-title">Surat Jalan</div>
-            <p class="card-desc">Pencatatan & Monitoring<br>Surat Jalan RTO</p>
-        </div>
-    """, unsafe_allow_html=True)
-    st.button("", key="btn_sj")
+# Panggil fungsi untuk tiap menu
+create_card(col1, "🏷️", "Cetak ID Koli", "Filter Stok 0% &<br>Transformasi Data", "Cetak_ID_Koli", "c1")
+create_card(col2, "📦", "Stock In", "Compare Data, Split PO,<br>& Stock Level", "Stock_In", "c2")
+create_card(col3, "👞", "Peminjaman", "Monitoring Sepatu<br>& Sandal Kerja", "Stock_In", "c3")
+create_card(col4, "📋", "Surat Jalan", "Pencatatan &<br>Monitoring RTO", "Stock_In", "c4")
