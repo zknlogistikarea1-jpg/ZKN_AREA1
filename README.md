@@ -1,5 +1,10 @@
 ---
-title: ZKN AREA1
+license: apache-2.0
+sdk: streamlit
+emoji: 🚀
+colorFrom: green
+colorTo: red
+---
 emoji: 🚀
 colorFrom: red
 colorTo: red
